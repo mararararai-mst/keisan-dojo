@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>けいさんどうじょう</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2b2b2b; --sub: #777; --line: #d9d2c5; --bg: #fbf7f0; --card: #fff;
+    --accent: #e9825a; --accent-soft: #fde6d9; --ok: #3f9a6b; --ok-soft: #dff2e7;
+    --num: "UD Digi Kyokasho N-R", "UD デジタル 教科書体 N-R", "Zen Maru Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Zen Maru Gothic", sans-serif; }
+
+  /* ---------- 画面（印刷しない部分） ---------- */
+  .panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 8px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: .05em; }
+  h1 small { font-size: 14px; color: var(--sub); font-weight: 500; margin-left: 8px; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; margin: 14px 0; }
+  .now { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .now .badge { background: var(--accent); color: #fff; border-radius: 12px; padding: 8px 14px; font-weight: 700; font-size: 20px; }
+  .now .t { font-size: 20px; font-weight: 700; }
+  .now .meta { color: var(--sub); font-size: 14px; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  button { font: inherit; font-weight: 700; border: 2px solid var(--ink); background: #fff; border-radius: 12px; padding: 10px 16px; cursor: pointer; }
+  button.main { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:hover { filter: brightness(.96); }
+  label { font-size: 14px; }
+  input[type=number], input[type=text] { font: inherit; width: 80px; padding: 6px 8px; border: 2px solid var(--line); border-radius: 8px; }
+  input[type=text] { width: 140px; }
+  .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .msg { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-weight: 700; display: none; }
+  .msg.ok { display: block; background: var(--ok-soft); color: var(--ok); }
+  .msg.again { display: block; background: var(--accent-soft); color: #b5532c; }
+  .rule { font-size: 13px; color: var(--sub); margin-top: 8px; line-height: 1.7; }
+  .map .unit { margin: 8px 0; }
+  .map .unit b { font-size: 14px; display: block; margin-bottom: 4px; }
+  .chip { display: inline-block; font-size: 13px; padding: 4px 9px; margin: 2px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; }
+  .chip.done { background: var(--ok-soft); border-color: var(--ok); }
+  .chip.cur { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  table.hist { border-collapse: collapse; font-size: 13px; width: 100%; }
+  table.hist input[type=number] { width: 60px; padding: 3px 6px; }
+  table.hist .ops { white-space: nowrap; text-align: right; }
+  button.small { padding: 3px 10px; font-size: 13px; border-width: 1.5px; border-radius: 8px; margin-left: 4px; }
+  table.hist td, table.hist th { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; }
+  .preview-title { max-width: 900px; margin: 0 auto; padding: 0 16px; color: var(--sub); font-size: 13px; }
+
+  /* ---------- プリント（A4） ---------- */
+  .sheet { width: 210mm; min-height: 297mm; margin: 12px auto; background: #fff; padding: 12mm 13mm; box-shadow: 0 2px 10px rgba(0,0,0,.12); color: #000; }
+  .sh-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 3mm; }
+  .sh-step { font-size: 11pt; }
+  .sh-step .code { border: 1.5px solid #000; border-radius: 3mm; padding: .5mm 2.5mm; margin-right: 2mm; font-weight: 700; }
+  .sh-title { font-size: 17pt; font-weight: 700; margin-top: 1.5mm; }
+  .sh-right { font-size: 10.5pt; text-align: right; line-height: 1.9; }
+  .sh-right .u { display: inline-block; min-width: 38mm; border-bottom: 1px solid #000; text-align: left; padding-left: 1mm; }
+  .sh-info { display: flex; gap: 8mm; font-size: 10.5pt; margin: 2.5mm 0 5mm; align-items: center; }
+  .sh-info .box { border: 1.5px solid #000; border-radius: 2mm; padding: 1mm 3mm; }
+  .sh-info .u { display: inline-block; min-width: 9mm; border-bottom: 1px solid #000; }
+
+  .grid { display: grid; column-gap: 8mm; }
+  .grid.h { grid-template-columns: 1fr 1fr; row-gap: 0; }
+  .p { display: flex; align-items: center; font-family: var(--num); font-size: 17pt; height: 15.2mm; border-bottom: 1px dotted #bbb; }
+  .grid.h20 .p { height: 21mm; }
+  .ex { display: inline-flex; align-items: center; justify-content: flex-end; min-width: 42mm; }
+  .ex.r { min-width: 30mm; }
+  .no { font-size: 8.5pt; color: #555; width: 8mm; flex: none; font-family: "Zen Maru Gothic", sans-serif; }
+  .ansbox { display: inline-block; width: 20mm; height: 11mm; border: 1.3px solid #000; border-radius: 1.5mm; margin-left: 2mm; vertical-align: middle; }
+  .ansbox.s { width: 13mm; }
+  .ansbox.tall { height: 17mm; width: 16mm; }
+  .ansbox.in { width: 12mm; margin: 0 1.5mm; }
+  .amari { font-size: 11pt; margin-left: 2mm; font-family: "Zen Maru Gothic", sans-serif; }
+  .fr { display: inline-flex; flex-direction: column; align-items: center; font-size: 15pt; line-height: 1.05; margin: 0 1mm; vertical-align: middle; }
+  .fr span:first-child { border-bottom: 1.3px solid #000; padding: 0 1mm; }
+  .sym { margin: 0 2mm; }
+
+  .grid.v { row-gap: 22mm; margin-top: 4mm; }
+  .grid.v.big { row-gap: 40mm; }
+  .hp { display: flex; gap: 2mm; }
+  .hp .no { padding-top: 1mm; }
+  table.hissan { border-collapse: collapse; font-family: var(--num); font-size: 18pt; }
+  table.hissan td { width: 8.5mm; height: 10mm; text-align: center; padding: 0; }
+  table.hissan td.dot { width: 3.5mm; }
+  table.hissan tr.bar td { border-top: 1.6px solid #000; }
+  table.hissan tr.work td { height: 10.5mm; }
+
+  .ans-sheet .grid { grid-template-columns: repeat(5, 1fr); row-gap: 2.5mm; column-gap: 4mm; font-size: 12pt; font-family: var(--num); }
+  .ans-sheet .a { display: flex; align-items: center; gap: 1.5mm; border-bottom: 1px dotted #bbb; padding: 1mm 0; }
+  .ans-sheet .fr { font-size: 10pt; }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .sheet { margin: 0; box-shadow: none; page-break-after: always; break-after: page; }
+    .sheet:last-child { page-break-after: auto; break-after: auto; }
+    .sheet.ans-sheet.off { display: none; }
+  }
+  @media (max-width: 860px) {
+    .sheet { transform-origin: top left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="panel no-print">
+  <h1>けいさんどうじょう<small>小3 算数・毎日1まい</small></h1>
+
+  <div class="card">
+    <div class="now">
+      <div class="badge" id="nowCode">A1</div>
+      <div>
+        <div class="t" id="nowTitle"></div>
+        <div class="meta" id="nowMeta"></div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="main" id="btnPrint">いんさつする</button>
+      <button id="btnNew">ちがう問題にする</button>
+      <label class="row" style="gap:6px"><input type="checkbox" id="withAns" checked> こたえのページもいんさつ</label>
+      <label class="row" style="gap:6px">なまえ <input type="text" id="kidName" placeholder="（空でもOK）"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <b>まるつけのあとに入れる</b>
+    <div class="row" style="margin-top:8px">
+      <label>×の数 <input type="number" id="miss" min="0" step="1"></label>
+      <label>かかった時間 <input type="number" id="mins" min="0" step="1"> 分（空でもOK）</label>
+      <button class="main" id="btnRecord">きろくする</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="rule">
+      合格＝×が1こ以下で、目安の時間内。合格すると次のステップに進みます。<br>
+      ×が2こ以上、または時間がかかったときは、同じステップをもう一回（問題は毎回かわります）。
+    </div>
+  </div>
+
+  <div class="card map">
+    <b>ステップのみちのり</b> <span class="rule">（チップを押すと、そのステップに切りかえられます）</span>
+    <div id="map"></div>
+  </div>
+
+  <div class="card">
+    <b>きろく</b>
+    <table class="hist" id="hist"></table>
+  </div>
+</div>
+
+<div class="preview-title no-print">▼ いんさつされるプリント</div>
+<div id="sheets"></div>
+
+<script src="gen.js"></script>
+<script>
+const { STEPS, makeSheet } = KeisanGen;
+const KEY = 'keisanDojo.v1';
+let state = load();
+let current = null; // { stepIdx, problems }
+let editing = -1;   // なおしている きろくの番号
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.step === 'number') return s; } catch (e) {}
+  return { step: 0, done: [], hist: [], name: '' };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const num = v => (v && typeof v === 'object') ? `<span class="fr"><span>${v.n}</span><span>${v.d}</span></span>` : esc(v);
+
+function today() { const d = new Date(); return `${d.getMonth() + 1}月${d.getDate()}日`; }
+
+function problemHTML(p, i) {
+  const no = `<span class="no">(${i + 1})</span>`;
+  if (p.t === 'op') return `<div class="p">${no}<span class="ex">${num(p.a)}<span class="sym">${p.o}</span>${num(p.b)}<span class="sym">=</span></span><span class="ansbox${typeof p.b === 'object' ? ' tall' : ''}"></span></div>`;
+  if (p.t === 'blank') {
+    const L = p.left == null ? '<span class="ansbox in"></span>' : p.left;
+    const Rt = p.right == null ? '<span class="ansbox in"></span>' : p.right;
+    return `<div class="p">${no}${L}<span class="sym">×</span>${Rt}<span class="sym">=</span>${p.c}</div>`;
+  }
+  if (p.t === 'rem') return `<div class="p">${no}<span class="ex r">${p.a}<span class="sym">÷</span>${p.b}<span class="sym">=</span></span><span class="ansbox s"></span><span class="amari">あまり</span><span class="ansbox s"></span></div>`;
+  if (p.t === 'hissan') {
+    const cols = Math.max(p.a.length, p.b.length, p.ans.length) + 1;
+    const cells = (s, lead) => {
+      const chars = s.split('');
+      const pad = cols - chars.length;
+      let h = '';
+      for (let k = 0; k < pad; k++) h += `<td>${k === 0 && lead ? lead : ''}</td>`;
+      chars.forEach(c => { h += c === '.' ? `<td class="dot">.</td>` : `<td>${c}</td>`; });
+      return h;
+    };
+    // 小数点の列は答えの行でも細くそろえる
+    const blank = s => s.split('').map(c => c === '.' ? '<td class="dot"></td>' : '<td></td>').join('');
+    const blankRow = '<td></td>'.repeat(cols - p.a.length) + blank(p.a);
+    let rows = `<tr>${cells(p.a, '')}</tr><tr>${cells(p.b, p.o)}</tr>`;
+    for (let r = 0; r < p.rows; r++) rows += `<tr class="work${r === 0 ? ' bar' : ''}">${blankRow}</tr>`;
+    if (p.rows > 1) rows = rows.replace(/<tr class="work">((?:(?!<\/tr>).)*)<\/tr>$/, '<tr class="work bar">$1</tr>');
+    return `<div class="hp">${no}<table class="hissan">${rows}</table></div>`;
+  }
+}
+
+function ansText(p) {
+  if (p.t === 'op' || p.t === 'blank' || p.t === 'hissan') return num(p.ans);
+  if (p.t === 'rem') return p.r === 0 ? `${p.q}` : `${p.q} <small>あまり</small> ${p.r}`;
+}
+
+function render() {
+  const st = STEPS[current.stepIdx];
+  const ps = current.problems;
+  const isH = ps[0].t === 'hissan';
+  let gridCls, gridStyle = '';
+  if (isH) {
+    const per = st.id === 'J3' ? 3 : 4;
+    gridCls = 'grid v' + (per === 3 || st.n <= 8 ? ' big' : ''); gridStyle = `grid-template-columns:repeat(${per},1fr)`;
+    if (st.rowsGap) gridStyle += `;row-gap:${st.rowsGap}`;
+  } else gridCls = 'grid h' + (st.n <= 20 ? ' h20' : '');
+  // 横式は左の列を上から下へ読む順にする
+  let order = ps.map((p, i) => i);
+  if (!isH) { const half = Math.ceil(ps.length / 2); order = []; for (let r = 0; r < half; r++) { order.push(r); if (r + half < ps.length) order.push(r + half); } }
+  const name = esc(state.name || '');
+  const head = (sub) => `
+    <div class="sh-head">
+      <div><div class="sh-step"><span class="code">${st.id}</span>${esc(st.unit)}${sub}</div><div class="sh-title">${esc(st.title)}</div></div>
+      <div class="sh-right">${current.date}<br>なまえ <span class="u">${name}</span></div>
+    </div>`;
+  const prob = `<div class="sheet">${head('')}
+    <div class="sh-info">
+      <span>はじめ <span class="u"></span>：<span class="u"></span></span>
+      <span>おわり <span class="u"></span>：<span class="u"></span></span>
+      <span class="box">目安 ${st.goal}分</span>
+      <span class="box">× <span class="u"></span> こ</span>
+    </div>
+    <div class="${gridCls}" style="${gridStyle}">${order.map(i => problemHTML(ps[i], i)).join('')}</div>
+  </div>`;
+  const ans = `<div class="sheet ans-sheet${document.getElementById('withAns').checked ? '' : ' off'}">${head('　<b>こたえ（おうちの人用）</b>')}
+    <div class="grid" style="margin-top:5mm">${ps.map((p, i) => `<div class="a"><span class="no">(${i + 1})</span>${ansText(p)}</div>`).join('')}</div>
+  </div>`;
+  document.getElementById('sheets').innerHTML = prob + ans;
+}
+
+function newSheet() {
+  current = { stepIdx: state.step, problems: makeSheet(STEPS[state.step]), date: today() };
+  render();
+}
+
+function renderPanel() {
+  const st = STEPS[state.step];
+  document.getElementById('nowCode').textContent = st.id;
+  document.getElementById('nowTitle').textContent = st.title;
+  const tries = state.hist.filter(h => h.step === st.id).length;
+  document.getElementById('nowMeta').textContent =
+    `ステップ ${state.step + 1} / ${STEPS.length}　・　${st.unit}　・　${st.n}問　・　目安 ${st.goal}分` + (tries ? `　・　このステップ ${tries + 1}回目` : '');
+  // みちのり
+  const units = [];
+  STEPS.forEach((s, i) => { let u = units.find(x => x.name === s.unit); if (!u) units.push(u = { name: s.unit, items: [] }); u.items.push(i); });
+  document.getElementById('map').innerHTML = units.map(u => `<div class="unit"><b>${esc(u.name)}</b>${u.items.map(i => {
+    const s = STEPS[i]; const cls = i === state.step ? 'cur' : (state.done.includes(s.id) ? 'done' : '');
+    return `<span class="chip ${cls}" data-i="${i}" title="${esc(s.title)}">${s.id} ${esc(s.title)}</span>`;
+  }).join('')}</div>`).join('');
+  // きろく（新しい順。なおす・けすができる）
+  const rows = state.hist.map((x, i) => ({ x, i })).slice(-12).reverse();
+  document.getElementById('hist').innerHTML = rows.length
+    ? `<tr><th>日づけ</th><th>ステップ</th><th>×</th><th>時間</th><th>けっか</th><th></th></tr>` +
+      rows.map(({ x, i }) => i === editing
+        ? `<tr class="editing"><td>${esc(x.date)}</td><td>${esc(x.step)}</td>
+             <td><input type="number" class="eMiss" min="0" step="1" value="${x.miss}"></td>
+             <td><input type="number" class="eMins" min="0" step="1" value="${x.mins == null ? '' : x.mins}"> 分</td>
+             <td></td><td class="ops"><button class="small main" data-act="save" data-i="${i}">ほぞん</button><button class="small" data-act="cancel">やめる</button></td></tr>`
+        : `<tr><td>${esc(x.date)}</td><td>${esc(x.step)}</td><td>${x.miss}</td><td>${x.mins == null ? '—' : x.mins + '分'}</td><td>${x.pass ? '合格' : 'もう一回'}</td>
+             <td class="ops"><button class="small" data-act="edit" data-i="${i}">なおす</button><button class="small" data-act="del" data-i="${i}">けす</button></td></tr>`).join('')
+    : '<tr><td style="color:var(--sub)">まだきろくがありません</td></tr>';
+}
+
+document.getElementById('btnPrint').onclick = () => window.print();
+document.getElementById('btnNew').onclick = newSheet;
+document.getElementById('withAns').onchange = render;
+const nameIn = document.getElementById('kidName');
+nameIn.value = state.name || '';
+nameIn.oninput = () => { state.name = nameIn.value; save(); render(); };
+
+const stepIdx = id => STEPS.findIndex(s => s.id === id);
+function judge(id, miss, mins) {
+  const st = STEPS[stepIdx(id)];
+  return miss <= 1 && !(mins != null && mins > st.goal);
+}
+function readNums(missV, minsV) {
+  if (missV === '' || !(+missV >= 0)) return null;
+  if (minsV !== '' && !(+minsV >= 0)) return null;
+  return { miss: Math.floor(+missV), mins: minsV === '' ? null : +minsV };
+}
+function showMsg(cls, text) { const m = document.getElementById('msg'); m.className = 'msg ' + cls; m.textContent = text; }
+function nextMsg() { const st = STEPS[state.step]; return `次は ${st.id}「${st.title}」です。`; }
+function refreshDone() { state.done = [...new Set(state.hist.filter(h => h.pass).map(h => h.step))]; }
+
+document.getElementById('btnRecord').onclick = () => {
+  const v = readNums(document.getElementById('miss').value, document.getElementById('mins').value);
+  if (!v) { showMsg('again', '×の数を入れてください（0こなら 0）'); return; }
+  const st = STEPS[state.step];
+  const pass = judge(st.id, v.miss, v.mins);
+  state.hist.push({ date: today(), step: st.id, miss: v.miss, mins: v.mins, pass });
+  editing = -1;
+  if (pass) {
+    if (state.step < STEPS.length - 1) { state.step++; showMsg('ok', '合格！ ' + nextMsg()); }
+    else showMsg('ok', '合格！ 小3の計算をぜんぶクリアしました。');
+  } else {
+    showMsg('again', v.miss >= 2 ? `×が${v.miss}こ。あしたも ${st.id} をもう一回（ちがう問題が出ます）。`
+                                 : `正かくさはOK。目安の${st.goal}分をめざして ${st.id} をもう一回。`);
+  }
+  refreshDone(); save();
+  document.getElementById('miss').value = ''; document.getElementById('mins').value = '';
+  renderPanel(); newSheet();
+};
+
+// いちばん新しいきろくを直す・消すときは、進んだステップも合わせて戻す／進める
+function undoLatest(rec) {
+  const k = stepIdx(rec.step);
+  if (rec.pass && state.step === k + 1) state.step = k;
+}
+function applyLatest(rec) {
+  const k = stepIdx(rec.step);
+  if (rec.pass && state.step === k && k < STEPS.length - 1) state.step = k + 1;
+}
+
+document.getElementById('hist').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const act = b.dataset.act, i = +b.dataset.i;
+  const before = state.step;
+  if (act === 'edit') { editing = i; renderPanel(); return; }
+  if (act === 'cancel') { editing = -1; renderPanel(); return; }
+  const isLatest = i === state.hist.length - 1;
+  const rec = state.hist[i];
+  if (act === 'save') {
+    const tr = b.closest('tr');
+    const v = readNums(tr.querySelector('.eMiss').value, tr.querySelector('.eMins').value);
+    if (!v) { showMsg('again', '×の数を入れてください（0こなら 0）'); return; }
+    if (isLatest) undoLatest(rec);
+    Object.assign(rec, v, { pass: judge(rec.step, v.miss, v.mins) });
+    if (isLatest) applyLatest(rec);
+    editing = -1;
+  }
+  if (act === 'del') {
+    if (!confirm(`${rec.date} の ${rec.step} のきろくをけしますか？`)) return;
+    if (isLatest) undoLatest(rec);
+    state.hist.splice(i, 1);
+    editing = -1;
+  }
+  refreshDone(); save(); renderPanel();
+  const head = act === 'del' ? 'きろくをけしました。' : 'きろくを直しました。';
+  if (state.step !== before) { showMsg('ok', head + nextMsg()); newSheet(); }
+  else if (!isLatest) showMsg('ok', head + `いまのステップ（${STEPS[state.step].id}）はそのままです。変えたいときは「ステップのみちのり」のチップを押してください。`);
+  else showMsg('ok', head);
+};
+
+document.getElementById('map').onclick = e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  const i = +c.dataset.i; if (i === state.step) return;
+  if (!confirm(`${STEPS[i].id}「${STEPS[i].title}」に切りかえますか？`)) return;
+  state.step = i; save(); renderPanel(); newSheet();
+};
+
+renderPanel();
+newSheet();
+</script>
+</body>
+</html>
